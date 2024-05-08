@@ -32,8 +32,110 @@ struct Tree {
 		req(array, 0, order, root);
 		return array;
 	}
-	int subtreeHight(Node* node) {
+	int subtreeDepth(Node* current) {
+		if (current == nullptr) return 0;
+		int left = subtreeDepth(current->left);
+		int right = subtreeDepth(current->right);
+		return max(left, right) + 1;
+	}
+	void ToLeft(int value) {
+		Node* parent = nullptr;
+		Node* current = root;
+		while (current != nullptr) {
+			if (value == current->value) {
+				break;
+			}
+			parent = current;
+			if (value < current->value) {
+				current = current->left;
+			}
+			else {
+				current = current->right;
+			}
+		}
+		if (current == nullptr) return;
+		Node* child = current->right;
+		if (child == nullptr) return;
+		if (parent == nullptr) {
+			root = child;
+		}
+		else {
+			if (parent->left == current) parent->left = child;
+			else parent->right = child;
+		}
+		current->right = child->left;
+		child->left = current;
+	}
+	void ToRight(int value) {
+		Node* parent = nullptr;
+		Node* current = root;
+		while (current != nullptr) {
+			if (value == current->value) {
+				break;
+			}
+			parent = current;
+			if (value < current->value) {
+				current = current->left;
+			}
+			else {
+				current = current->right;
+			}
+		}
+		if (current == nullptr) return;
+		Node* child = current->left;
+		if (child == nullptr) return;
+		if (parent == nullptr) {
+			root = child;
+		}
+		else {
+			if (parent->left == current) parent->left = child;
+			else parent->right = child;
+		}
+		current->left = child->right;
+		child->right = current;
+	}
+	void Balance(Node* current = nullptr) {
+		if (current == nullptr) current = root;
+		if (current->left != nullptr) Balance(current->left);
+		if (current->right != nullptr) Balance(current->right);
+		if (subtreeDepth(current) < 3) return;
+		int i = subtreeDepth(root->left) - subtreeDepth(root->right);
+		//int temp;
+		for (i; i > 0; i -= 2) {
+			//temp = current->value;
+			ToRight(current->value);
+		}
+		for (i; i < 0; i += 2) {
+			ToRight(current->value);
+		}
 
+		/*while ((i < -1) || (i > 1)) {
+			if (i > 0) {
+				ToRight(current->value);
+				i-=2;
+			}
+			else if (i < 0) {
+				ToLeft(current->value);
+				i+=2;
+			}
+		}*/
+	}
+	Node* goTo2(int value, Node*& parent) {
+		Node* current = root;
+		while (current != nullptr) {
+			if (value == current->value) {
+				return current;
+			}
+			parent = current;
+			if (value < current->value) {
+				current = current->left;
+			}
+			else {
+				current = current->right;
+			}
+		}
+		parent = nullptr;
+		return nullptr;
 	}
 	Node* goTo(int value) {
 		Node* current = root;
@@ -164,10 +266,24 @@ void main() {
 		tree.add(input);
 		cin >> input;
 	}
-	int* arr = tree.ToArray();
+
+
+	//tree.ToRight(1);
+	//tree.ToRight(2);
+	//cout << tree.subtreeDepth(tree.root) << endl;
+	
+
+	int* arr = tree.ToArray(Postfix);
 	for (int i = 0; i < tree.count(); i++) {
 		cout << arr[i] << " ";
 	}
+	cout << endl;
+	tree.Balance();
+	arr = tree.ToArray(Postfix);
+	for (int i = 0; i < tree.count(); i++) {
+		cout << arr[i] << " ";
+	}
+	cout << endl;
 	cout << "Enter numbers to search (sequence end sign 0):" << endl;
 	cin >> input;
 	while (input) {
