@@ -1,7 +1,7 @@
 #include <iostream>
 using namespace std;
 
-enum Order { Prefix, Infix, Postfix };
+enum Oder { Prefix, Infix, Postfix };
 struct Node {
 	Node* left = nullptr;
 	Node* right = nullptr;
@@ -10,7 +10,7 @@ struct Node {
 struct Tree {
 	int size = 0;
 	Node* root = nullptr;
-	int req(int* array, int index, Order order, Node* current) {
+	int req(int* array, int index, Oder order, Node* current) {
 		if (current == nullptr) return index;
 		if (order == Prefix) {
 			array[index] = current->value;
@@ -27,7 +27,7 @@ struct Tree {
 			index++;
 		}
 	}
-	int* ToArray(Order order = Infix) {
+	int* ToArray(Oder order = Infix) {
 		int* array = new int[count()];
 		req(array, 0, order, root);
 		return array;
@@ -136,7 +136,7 @@ struct Tree {
 		//}
 		//cout << endl;
 		while (subtreeDepth(current) > 3) {
-			if (abs(subtreeDepth(current) - minLeafDepth(current)) > 1) {
+			if ((subtreeDepth(current) - minLeafDepth(current)) > 1) {
 				if (subtreeDepth(current->left) > subtreeDepth(current->right)) {
 					ToRight(current->value);
 				}
