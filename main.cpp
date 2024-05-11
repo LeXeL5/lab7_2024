@@ -38,6 +38,12 @@ struct Tree {
 		int right = subtreeDepth(current->right);
 		return max(left, right) + 1;
 	}
+	int minLeafDepth(Node* current){
+		if (current == nullptr) return 0;
+		int left = minLeafDepth(current->left);
+		int right = minLeafDepth(current->right);
+		return min(left, right) + 1;
+	}
 	void ToLeft(int value) {
 		Node* parent = nullptr;
 		Node* current = root;
@@ -99,28 +105,54 @@ struct Tree {
 		if (current->left != nullptr) Balance(current->left);
 		if (current->right != nullptr) Balance(current->right);
 		if (subtreeDepth(current) < 3) return;
-		int i = subtreeDepth(root->left) - subtreeDepth(root->right);
-		//int temp;
-		for (i; i > 0; i -= 2) {
-			//temp = current->value;
-			ToRight(current->value);
-		}
-		for (i; i < 0; i += 2) {
-			ToRight(current->value);
-		}
-
-		/*while ((i < -1) || (i > 1)) {
-			if (i > 0) {
+		bool isLeft = true;
+		if (subtreeDepth(current->left) - 1 > subtreeDepth(current->right)) {
+			isLeft = true;
+			if (subtreeDepth(current->left->left) >= subtreeDepth(current->left->right)) {
+				//левая внешняя ветка самая глубокая
 				ToRight(current->value);
-				i-=2;
 			}
-			else if (i < 0) {
+			else {
+				//левая внутренняя ветка самая глубокая
+				ToLeft(current->left->value);
+				ToRight(current->value);
+			}
+		}
+		else if (subtreeDepth(current->left) < subtreeDepth(current->right) - 1) {
+			isLeft = false;
+			if (subtreeDepth(current->right->right) >= subtreeDepth(current->right->left)) {
+				//правая внешняя ветка самая глубокая
 				ToLeft(current->value);
-				i+=2;
 			}
-		}*/
+			else {
+				// правая внутренняя ветка самая глубокая
+				ToRight(current->right->value);
+				ToLeft(current->value);
+			}
+		}
+		//int* arr = ToArray(Postfix);
+		//for (int i = 0; i < count(); i++) {
+		//	cout << arr[i] << " ";
+		//}
+		//cout << endl;
+		while (subtreeDepth(current) > 3) {
+			if (abs(subtreeDepth(current) - minLeafDepth(current)) > 1) {
+				if (subtreeDepth(current->left) > subtreeDepth(current->right)) {
+					ToRight(current->value);
+				}
+				else {
+					ToLeft(current->value);
+				}
+			}
+			if (isLeft) {
+				current = current->right;
+			}
+			else {
+				current = current->left;
+			}
+		}
 	}
-	Node* goTo2(int value, Node*& parent) {
+	/*Node* goTo2(int value, Node*& parent) {
 		Node* current = root;
 		while (current != nullptr) {
 			if (value == current->value) {
@@ -136,7 +168,7 @@ struct Tree {
 		}
 		parent = nullptr;
 		return nullptr;
-	}
+	}*/
 	Node* goTo(int value) {
 		Node* current = root;
 		while (current != nullptr) {
@@ -266,24 +298,23 @@ void main() {
 		tree.add(input);
 		cin >> input;
 	}
-
-
-	//tree.ToRight(1);
-	//tree.ToRight(2);
-	//cout << tree.subtreeDepth(tree.root) << endl;
-	
+	/*cout << tree.subtreeDepth(tree.root) << endl;
+	cout << tree.minLeafDepth(tree.root) << endl;
 
 	int* arr = tree.ToArray(Postfix);
 	for (int i = 0; i < tree.count(); i++) {
 		cout << arr[i] << " ";
 	}
 	cout << endl;
+
 	tree.Balance();
+
 	arr = tree.ToArray(Postfix);
 	for (int i = 0; i < tree.count(); i++) {
 		cout << arr[i] << " ";
 	}
 	cout << endl;
+	*/
 	cout << "Enter numbers to search (sequence end sign 0):" << endl;
 	cin >> input;
 	while (input) {
