@@ -1,16 +1,16 @@
 #include <iostream>
 using namespace std;
 
-enum Oder { Prefix, Infix, Postfix };
 struct Node {
 	Node* left = nullptr;
 	Node* right = nullptr;
 	int value = 0;
 };
 struct Tree {
+	enum Order { Prefix, Infix, Postfix };
 	int size = 0;
 	Node* root = nullptr;
-	int req(int* array, int index, Oder order, Node* current) {
+	int req(int* array, int index, Order order, Node* current) {
 		if (current == nullptr) return index;
 		if (order == Prefix) {
 			array[index] = current->value;
@@ -27,7 +27,7 @@ struct Tree {
 			index++;
 		}
 	}
-	int* ToArray(Oder order = Infix) {
+	int* ToArray(Order order = Infix) {
 		int* array = new int[count()];
 		req(array, 0, order, root);
 		return array;
