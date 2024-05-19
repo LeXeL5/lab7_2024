@@ -16,10 +16,10 @@ struct Tree {
 
 	void depthFixer(Node* current) {
 		while (current != nullptr) {
-			int left = 0;
-			int right = 0;
-			int minLeft = 0;
-			int minRight = 0;
+			unsigned short left = 0;
+			unsigned short right = 0;
+			unsigned short minLeft = 0;
+			unsigned short minRight = 0;
 			if (current->left != nullptr) {
 				left = current->left->depth;
 				minLeft = current->left->minDepth;
@@ -56,8 +56,9 @@ struct Tree {
 		req(array, 0, order, root);
 		return array;
 	}
-	void turn(Node*& current, Node* parent, bool isLeft) {
+	void turn(Node*& current, bool isLeft) {
 		if (current == nullptr) return;
+		Node* parent = current->up;
 		Node* child = nullptr;
 		if (isLeft) {
 			child = current->right;
@@ -91,22 +92,19 @@ struct Tree {
 		return;
 	}
 	void ToLeft(int value) {
-		Node* parent = nullptr;
-		Node* current = goTo(value, parent);
-		turn(current, parent, true);
+		Node* current = goTo(value);
+		turn(current, true);
 	}
 	void ToRight(int value) {
-		Node* parent = nullptr;
-		Node* current = goTo(value, parent);
-		turn(current, parent, false);
+		Node* current = goTo(value);
+		turn(current, false);
 	}
-	Node* goTo(int value, Node*& parent) {
+	Node* goTo(int value) {
 		Node* current = root;
 		while (current != nullptr) {
 			if (value == current->value) {
 				return current;
 			}
-			parent = current;
 			if (value < current->value) {
 				current = current->left;
 			}
@@ -116,6 +114,23 @@ struct Tree {
 		}
 		return nullptr;
 	}
+	Node* goToParent(int value) {
+		Node* parent = nullptr;
+		Node* current = root;
+		while (current != nullptr) {
+			if (value == current->value) {
+				return nullptr;
+			}
+			parent = current;
+			if (value < current->value) {
+				current = current->left;
+			}
+			else {
+				current = current->right;
+			}
+		}
+		return parent;
+	}
 	void add(int value) {
 		if (!size) {
 			Node* newNode = new Node;
@@ -124,12 +139,12 @@ struct Tree {
 			root = newNode;
 			return;
 		}
-		Node* parent = nullptr;
-		if (goTo(value, parent) != nullptr) return;
+		Node* parent = goToParent(value);
+		if (parent == nullptr) return;
 		Node* newNode = new Node;
+		size++;
 		newNode->up = parent;
 		newNode->value = value;
-		size++;
 		if (value > parent->value) {
 			parent->right = newNode;
 		}
@@ -139,9 +154,9 @@ struct Tree {
 		depthFixer(newNode);
 	}
 	void remove(int value) {
-		Node* parent = nullptr;
-		Node* current = goTo(value, parent);
+		Node* current = goTo(value);
 		if (current == nullptr) return;
+		Node* parent = current->up;
 		if ((current->right != nullptr) && (current->left != nullptr)) {
 			parent = current;
 			Node* min = current->right;
@@ -180,15 +195,14 @@ struct Tree {
 		clear(current->left);
 		clear(current->right);
 		delete current;
-		size--;
 	}
 	void clear() {
 		clear(root);
 		root = nullptr;
+		size = 0;
 	}
 	bool contains(int value) {
-		Node* parent = nullptr;
-		if (goTo(value, parent) != nullptr) {
+		if (goTo(value) != nullptr) {
 			return true;
 		}
 		else {
@@ -208,20 +222,26 @@ void main() {
 		tree.add(input);
 		cin >> input;
 	}
+	/*
+	int* arr = tree.ToArray(tree.Postfix);
+	for (int i = 0; i < tree.count(); i++) {
+		cout << arr[i] << " ";
+	}
+	cout << endl;
 
-	//int* arr = tree.ToArray(tree.Postfix);
-	//for (int i = 0; i < tree.count(); i++) {
-	//	cout << arr[i] << " ";
-	//}
-	//cout << endl;
+	cout << "Enter numbers to remove (sequence end sign 0):" << endl;
+	cin >> input;
+	while (input) {
+		tree.remove(input);
+		cin >> input;
+	}
 
-	//cout << "Enter numbers to remove (sequence end sign 0):" << endl;
-	//cin >> input;
-	//while (input) {
-	//	tree.remove(input);
-	//	cin >> input;
-	//}
-
+	arr = tree.ToArray(tree.Postfix);
+	for (int i = 0; i < tree.count(); i++) {
+		cout << arr[i] << " ";
+	}
+	cout << endl;
+	*/
 	cout << "Enter numbers to search (sequence end sign 0):" << endl;
 	cin >> input;
 	while (input) {
