@@ -1,22 +1,38 @@
 #include <iostream>
 using namespace std;
 
-
 struct Tree {
 	struct Node {
 		Node* left = nullptr;
 		Node* right = nullptr;
+		Node* up = nullptr;
 		int value = 0;
+		unsigned short depth = 1;
+		unsigned short minDepth = 0;
 	};
-	struct Heightmap {
-		Node* left = nullptr;
-		Node* right = nullptr;
-	};
-
 	enum Order { Prefix, Infix, Postfix };
 	int size = 0;
 	Node* root = nullptr;
 
+	void depthFixer(Node* current) {
+		while (current != nullptr) {
+			int left = 0;
+			int right = 0;
+			int minLeft = 0;
+			int minRight = 0;
+			if (current->left != nullptr) {
+				left = current->left->depth;
+				minLeft = current->left->minDepth;
+			}
+			if (current->right != nullptr) {
+				right = current->right->depth;
+				minRight = current->right->depth;
+			}
+			current->depth = max(left, right) + 1;
+			current->minDepth = (min(minLeft, minRight) + 1);
+			current = current->up;
+		}
+	}
 	int req(int* array, int index, Order order, Node* current) {
 		if (current == nullptr) return index;
 		if (order == Prefix) {
@@ -30,6 +46,7 @@ struct Tree {
 		}
 		index = req(array, index, order, current->right);
 		if (order == Postfix) {
+			//cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
 			array[index] = current->value;
 			index++;
 		}
@@ -39,20 +56,6 @@ struct Tree {
 		req(array, 0, order, root);
 		return array;
 	}
-
-	int subtreeDepth(Node* current) {
-		if (current == nullptr) return 0;
-		int left = subtreeDepth(current->left);
-		int right = subtreeDepth(current->right);
-		return max(left, right) + 1;
-	}
-	int minLeafDepth(Node* current) {
-		if (current == nullptr) return 0;
-		int left = minLeafDepth(current->left);
-		int right = minLeafDepth(current->right);
-		return min(left, right) + 1;
-	}
-
 	void turn(Node*& current, Node* parent, bool isLeft) {
 		if (current == nullptr) return;
 		Node* child = nullptr;
@@ -63,6 +66,8 @@ struct Tree {
 			child = current->left;
 		}
 		if (child == nullptr) return;
+		child->up = parent;
+		current->up = child;
 		if (parent == nullptr) {
 			root = child;
 		}
@@ -72,12 +77,17 @@ struct Tree {
 		}
 		if (isLeft) {
 			current->right = child->left;
+			if (child->left != nullptr) child->left->up = current;
 			child->left = current;
+
 		}
 		else {
 			current->left = child->right;
+			if (child->right != nullptr) child->right->up = current;
 			child->right = current;
 		}
+		depthFixer(current);
+		current = child;
 		return;
 	}
 	void ToLeft(int value) {
@@ -89,10 +99,6 @@ struct Tree {
 		Node* parent = nullptr;
 		Node* current = goTo(value, parent);
 		turn(current, parent, false);
-	}
-
-	void Balance(Node* current = nullptr) {
-
 	}
 	Node* goTo(int value, Node*& parent) {
 		Node* current = root;
@@ -121,6 +127,7 @@ struct Tree {
 		Node* parent = nullptr;
 		if (goTo(value, parent) != nullptr) return;
 		Node* newNode = new Node;
+		newNode->up = parent;
 		newNode->value = value;
 		size++;
 		if (value > parent->value) {
@@ -129,6 +136,7 @@ struct Tree {
 		else {
 			parent->left = newNode;
 		}
+		depthFixer(newNode);
 	}
 	void remove(int value) {
 		Node* parent = nullptr;
@@ -162,6 +170,8 @@ struct Tree {
 		else {
 			root = child;
 		}
+		if (child != nullptr) child->up = parent;
+		depthFixer(current); 
 		delete current;
 		size--;
 	}
@@ -192,13 +202,26 @@ struct Tree {
 void main() {
 	Tree tree;
 	int input = 0;
-	cout << "Enter sequence of numbers (sequence end sign 0):" << endl;
+	cout << "Enter numbers to add (sequence end sign 0):" << endl;
 	cin >> input;
 	while (input) {
 		tree.add(input);
 		cin >> input;
 	}
-	
+
+	//int* arr = tree.ToArray(tree.Postfix);
+	//for (int i = 0; i < tree.count(); i++) {
+	//	cout << arr[i] << " ";
+	//}
+	//cout << endl;
+
+	//cout << "Enter numbers to remove (sequence end sign 0):" << endl;
+	//cin >> input;
+	//while (input) {
+	//	tree.remove(input);
+	//	cin >> input;
+	//}
+
 	cout << "Enter numbers to search (sequence end sign 0):" << endl;
 	cin >> input;
 	while (input) {
