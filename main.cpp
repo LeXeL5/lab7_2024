@@ -13,7 +13,51 @@ struct Tree {
 	enum Order { Prefix, Infix, Postfix };
 	int size = 0;
 	Node* root = nullptr;
+	int getDepth(Node* current, bool isLeft ) {
+		if (isLeft) {
+			if (current->left != nullptr) return current->left->depth;
+		}
+		else {
+			if (current->right != nullptr) return current->right->depth;
+		}
+		return 0;
+	}
+	bool doubleTurn(Node*& current) {
+		if (getDepth(current, true) - 1 > getDepth(current, false)) {
+			if (getDepth(current->left, true) < getDepth(current->left, false)) {
+				turn(current->left, true);
+			}
+			turn(current, false);
+			current = current->right;
+			return true;
+		}
+		if (getDepth(current, false) - 1 > getDepth(current, true)) {
+			if (getDepth(current->right, false) < getDepth(current->right, true)) {
+				turn(current->right, false);
+			}
+			turn(current, true);
+			current = current->left;
+			return false;
+		}
+	}
+	void Balance(Node* current = nullptr) {
+		if (current == nullptr) current = root;
 
+		if (current == nullptr) return;
+		if (current->depth < 3) return;
+		if (current->left != nullptr) Balance(current->left);
+		if (current->right != nullptr) Balance(current->right);
+
+		doubleTurn(current);
+		if (current == nullptr) return;
+		if (current->depth < 3) return;
+		
+		while (current->depth - current->minDepth > 1) {
+			doubleTurn(current);
+			if (current == nullptr) return;
+			if (current->depth < 3) return;
+		}
+	}
 	void depthFixer(Node* current) {
 		while (current != nullptr) {
 			unsigned short left = 0;
@@ -26,37 +70,40 @@ struct Tree {
 			}
 			if (current->right != nullptr) {
 				right = current->right->depth;
-				minRight = current->right->depth;
+				minRight = current->right->minDepth;
 			}
 			current->depth = max(left, right) + 1;
 			current->minDepth = (min(minLeft, minRight) + 1);
 			current = current->up;
 		}
 	}
-	int req(int* array, int index, Order order, Node* current) {
-		if (current == nullptr) return index;
+	void req(int* array, int& index, Order order, Node* current) {
+		if (current == nullptr) return;
 		if (order == Prefix) {
+			cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
 			array[index] = current->value;
 			index++;
 		}
-		index = req(array, index, order, current->left);
+		req(array, index, order, current->left);
 		if (order == Infix) {
+			cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
 			array[index] = current->value;
 			index++;
 		}
-		index = req(array, index, order, current->right);
+		req(array, index, order, current->right);
 		if (order == Postfix) {
-			//cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
+			cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
 			array[index] = current->value;
 			index++;
 		}
 	}
 	int* ToArray(Order order = Infix) {
 		int* array = new int[count()];
-		req(array, 0, order, root);
+		int index = 0;
+		req(array, index, order, root);
 		return array;
 	}
-	void turn(Node*& current, bool isLeft) {
+	void turn(Node*& current, bool isLeft)   {
 		if (current == nullptr) return;
 		Node* parent = current->up;
 		Node* child = nullptr;
@@ -213,7 +260,7 @@ struct Tree {
 		return size;
 	}
 };
-void main() {
+int main() {
 	Tree tree;
 	int input = 0;
 	cout << "Enter numbers to add (sequence end sign 0):" << endl;
@@ -222,26 +269,21 @@ void main() {
 		tree.add(input);
 		cin >> input;
 	}
-	/*
-	int* arr = tree.ToArray(tree.Postfix);
+
+	int* arr = tree.ToArray(tree.Prefix);
 	for (int i = 0; i < tree.count(); i++) {
 		cout << arr[i] << " ";
 	}
 	cout << endl;
 
-	cout << "Enter numbers to remove (sequence end sign 0):" << endl;
-	cin >> input;
-	while (input) {
-		tree.remove(input);
-		cin >> input;
-	}
+	tree.Balance();
 
-	arr = tree.ToArray(tree.Postfix);
+	int* arr2 = tree.ToArray(tree.Prefix);
 	for (int i = 0; i < tree.count(); i++) {
-		cout << arr[i] << " ";
+		cout << arr2[i] << " ";
 	}
 	cout << endl;
-	*/
+	
 	cout << "Enter numbers to search (sequence end sign 0):" << endl;
 	cin >> input;
 	while (input) {
@@ -254,4 +296,5 @@ void main() {
 		cin >> input;
 	}
 	tree.clear();
+	return 0;
 }
