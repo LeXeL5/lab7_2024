@@ -13,7 +13,7 @@ struct Tree {
 	enum Order { Prefix, Infix, Postfix };
 	int size = 0;
 	Node* root = nullptr;
-	int getDepth(Node* current, bool isLeft ) {
+	int getDepth(Node* current, bool isLeft) {
 		if (isLeft) {
 			if (current->left != nullptr) return current->left->depth;
 		}
@@ -22,23 +22,24 @@ struct Tree {
 		}
 		return 0;
 	}
-	bool doubleTurn(Node*& current) {
+	Node* doubleTurn(Node* current) {
 		if (getDepth(current, true) - 1 > getDepth(current, false)) {
 			if (getDepth(current->left, true) < getDepth(current->left, false)) {
+				//current->left = 
 				turn(current->left, true);
 			}
-			turn(current, false);
+			current = turn(current, false);
 			current = current->right;
-			return true;
 		}
-		if (getDepth(current, false) - 1 > getDepth(current, true)) {
+		else if (getDepth(current, false) - 1 > getDepth(current, true)) {
 			if (getDepth(current->right, false) < getDepth(current->right, true)) {
+				//current->right =
 				turn(current->right, false);
 			}
-			turn(current, true);
+			current = turn(current, true);
 			current = current->left;
-			return false;
 		}
+		return current;
 	}
 	void Balance(Node* current = nullptr) {
 		if (current == nullptr) current = root;
@@ -48,12 +49,12 @@ struct Tree {
 		if (current->left != nullptr) Balance(current->left);
 		if (current->right != nullptr) Balance(current->right);
 
-		doubleTurn(current);
+		current = doubleTurn(current);
 		if (current == nullptr) return;
 		if (current->depth < 3) return;
-		
+
 		while (current->depth - current->minDepth > 1) {
-			doubleTurn(current);
+			current = doubleTurn(current);
 			if (current == nullptr) return;
 			if (current->depth < 3) return;
 		}
@@ -103,8 +104,44 @@ struct Tree {
 		req(array, index, order, root);
 		return array;
 	}
-	void turn(Node*& current, bool isLeft)   {
-		if (current == nullptr) return;
+	Node* turn(Node* current, bool isLeft) {
+		if (current == nullptr) return current;
+		Node* parent = current->up;
+		Node* child = nullptr;
+		Node* grandchild = nullptr;
+		if (isLeft) {
+			child = current->right;
+			if (child == nullptr) return current;
+			grandchild = child->left;
+			child->left = current;
+			current->right = grandchild;
+		}
+		else {
+			child = current->left;
+			if (child == nullptr) return current;
+			grandchild = child->right;
+			child->right = current;
+			current->left = grandchild;
+		}
+		if (parent == nullptr) {
+			root = child;
+		}
+		else {
+			if (parent->left == current) {
+				parent->left = child;
+			}
+			else {
+				parent->right = child;
+			}
+		}
+		if (grandchild != nullptr) grandchild->up = current;
+		current->up = child;
+		child->up = parent;
+		depthFixer(current);
+		return child;
+	}
+	Node* turnOld(Node* current, bool isLeft)   {
+		if (current == nullptr) return current;
 		Node* parent = current->up;
 		Node* child = nullptr;
 		if (isLeft) {
@@ -113,7 +150,7 @@ struct Tree {
 		else {
 			child = current->left;
 		}
-		if (child == nullptr) return;
+		if (child == nullptr) return current;
 		child->up = parent;
 		current->up = child;
 		if (parent == nullptr) {
@@ -135,8 +172,7 @@ struct Tree {
 			child->right = current;
 		}
 		depthFixer(current);
-		current = child;
-		return;
+		return child;
 	}
 	void ToLeft(int value) {
 		Node* current = goTo(value);
@@ -269,16 +305,17 @@ int main() {
 		tree.add(input);
 		cin >> input;
 	}
-
-	int* arr = tree.ToArray(tree.Prefix);
+	
+	int* arr = tree.ToArray(tree.Postfix);
 	for (int i = 0; i < tree.count(); i++) {
 		cout << arr[i] << " ";
 	}
 	cout << endl;
-
+	
+	//tree.ToRight(5);
 	tree.Balance();
 
-	int* arr2 = tree.ToArray(tree.Prefix);
+	int* arr2 = tree.ToArray(tree.Postfix);
 	for (int i = 0; i < tree.count(); i++) {
 		cout << arr2[i] << " ";
 	}
