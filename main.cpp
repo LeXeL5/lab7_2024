@@ -13,6 +13,48 @@ struct Tree {
 	enum Order { Prefix, Infix, Postfix };
 	int size = 0;
 	Node* root = nullptr;
+	void renegadeBalancer(Node* current) {
+		if (current == nullptr) return;
+		bool isLeft = true;  //левая ветка по умолчанию
+		if (current->right == nullptr) {
+			isLeft = false;  // правая если правого ребенка нет
+		}
+		while (abs(getDepth(current, true) - getDepth(current, false)) > 1) {
+			cout << "renegadeBalancer " << isLeft << endl;
+			doubleTurn(current);  //повороты в ту же сторону что и ветка, current сам перемещается ниже
+		}
+	}
+	void additionalTurn(Node* current) {
+		if (current == nullptr) return;
+		if (getDepth(current, true) > getDepth(current, false)) {
+			if (getMinDepth(current, true) == getDepth(current, false)) {
+				cout << "additional turn right"<< endl;
+				turn(current->left, true);
+				if (turn(current, false)) current = current->up;
+				doubleTurn(current->left);
+				doubleTurn(current->right);
+			}
+		}
+		else if (getDepth(current, true) < getDepth(current, false)) {
+			if (getDepth(current, true) == getMinDepth(current, false)) {
+				cout << "additional turn left" << endl;
+				turn(current->right, false);
+				if (turn(current, true)) current = current->up;
+				doubleTurn(current->right);
+				doubleTurn(current->left);
+			}
+		}
+		else cout << "no additional turn" << endl;
+	}
+	int getMinDepth(Node* current, bool isLeft) {
+		if (isLeft) {
+			if (current->left != nullptr) return current->left->minDepth;
+		}
+		else {
+			if (current->right != nullptr) return current->right->minDepth;
+		}
+		return 0;
+	}
 	int getDepth(Node* current, bool isLeft) {
 		if (isLeft) {
 			if (current->left != nullptr) return current->left->depth;
@@ -22,19 +64,28 @@ struct Tree {
 		}
 		return 0;
 	}
-	void doubleTurn(Node* current) {
+	bool doubleTurn(Node* current) {
 		if (getDepth(current, true) - 1 > getDepth(current, false)) {
 			if (getDepth(current->left, true) < getDepth(current->left, false)) {
+				cout << "child turn left" << endl;
 				turn(current->left, true);
 			}
+			cout << "current turn right" << endl;
 			turn(current, false);
+			return true;
 		}
 		else if (getDepth(current, false) - 1 > getDepth(current, true)) {
+			//cout << getDepth(current->right, false) << getDepth(current->right, true) << endl;
 			if (getDepth(current->right, false) < getDepth(current->right, true)) {
+				cout << "child turn right" << endl;
 				turn(current->right, false);
 			}
+			cout << "current turn left" << endl;
 			turn(current, true);
+			return true;
 		}
+		cout << "no turn" << endl;
+		return false;
 	}
 	void Balance(Node* current = nullptr) {
 		if (current == nullptr) current = root;
@@ -44,10 +95,20 @@ struct Tree {
 		if (current->right != nullptr) Balance(current->right);
 		if (current == nullptr) return;
 		if (current->depth < 3) return;
-		doubleTurn(current);
-		if (current->depth - current->minDepth > 1) {
-			doubleTurn(current);
+		cout << current->value << endl;
+		if (doubleTurn(current)) {
+			//cout << current->value << endl;
+			renegadeBalancer(current);
 		}
+		else {
+			//cout << current->value << endl;
+			additionalTurn(current);
+		}
+		int* arr = ToArray(Prefix);
+		for (int i = 0; i < count(); i++) {
+			cout << arr[i] << " ";
+		}
+		cout << endl;
 	}
 	void depthFixer(Node* current) {
 		while (current != nullptr) {
@@ -71,19 +132,19 @@ struct Tree {
 	void req(int* array, int& index, Order order, Node* current) {
 		if (current == nullptr) return;
 		if (order == Prefix) {
-			cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
+			//cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
 			array[index] = current->value;
 			index++;
 		}
 		req(array, index, order, current->left);
 		if (order == Infix) {
-			cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
+			//cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
 			array[index] = current->value;
 			index++;
 		}
 		req(array, index, order, current->right);
 		if (order == Postfix) {
-			cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
+			//cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
 			array[index] = current->value;
 			index++;
 		}
@@ -94,21 +155,21 @@ struct Tree {
 		req(array, index, order, root);
 		return array;
 	}
-	void turn(Node* current, bool isLeft) {
-		if (current == nullptr) return;
+	bool turn(Node* current, bool isLeft) {
+		if (current == nullptr) return false;
 		Node* parent = current->up;
 		Node* child = nullptr;
 		Node* grandchild = nullptr;
 		if (isLeft) {
 			child = current->right;
-			if (child == nullptr) return;
+			if (child == nullptr) return false;
 			grandchild = child->left;
 			child->left = current;
 			current->right = grandchild;
 		}
 		else {
 			child = current->left;
-			if (child == nullptr) return;
+			if (child == nullptr) return false;
 			grandchild = child->right;
 			child->right = current;
 			current->left = grandchild;
@@ -128,6 +189,7 @@ struct Tree {
 		current->up = child;
 		child->up = parent;
 		depthFixer(current);
+		return true;
 	}
 	void ToLeft(int value) {
 		Node* current = goTo(value);
@@ -261,7 +323,7 @@ int main() {
 		cin >> input;
 	}
 	
-	int* arr = tree.ToArray(tree.Postfix);
+	int* arr = tree.ToArray(tree.Prefix);
 	for (int i = 0; i < tree.count(); i++) {
 		cout << arr[i] << " ";
 	}
@@ -269,12 +331,6 @@ int main() {
 	
 	tree.Balance();
 
-	int* arr2 = tree.ToArray(tree.Postfix);
-	for (int i = 0; i < tree.count(); i++) {
-		cout << arr2[i] << " ";
-	}
-	cout << endl;
-	
 	cout << "Root Depth: "<< tree.root->depth << "   Root Min Depth:" << tree.root->minDepth << endl;
 	cout << "Enter numbers to search (sequence end sign 0):" << endl;
 	cin >> input;
