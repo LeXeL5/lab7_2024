@@ -15,20 +15,14 @@ struct Tree {
 	Node* root = nullptr;
 	void renegadeBalancer(Node* current) {
 		if (current == nullptr) return;
-		bool isLeft = true;  //левая ветка по умолчанию
-		if (current->right == nullptr) {
-			isLeft = false;  // правая если правого ребенка нет
-		}
 		while (abs(getDepth(current, true) - getDepth(current, false)) > 1) {
-			cout << "renegadeBalancer " << isLeft << endl;
-			doubleTurn(current);  //повороты в ту же сторону что и ветка, current сам перемещается ниже
+			doubleTurn(current);
 		}
 	}
 	void additionalTurn(Node* current) {
 		if (current == nullptr) return;
 		if (getDepth(current, true) > getDepth(current, false)) {
 			if (getMinDepth(current, true) == getDepth(current, false)) {
-				cout << "additional turn right"<< endl;
 				turn(current->left, true);
 				if (turn(current, false)) current = current->up;
 				doubleTurn(current->left);
@@ -37,14 +31,12 @@ struct Tree {
 		}
 		else if (getDepth(current, true) < getDepth(current, false)) {
 			if (getDepth(current, true) == getMinDepth(current, false)) {
-				cout << "additional turn left" << endl;
 				turn(current->right, false);
 				if (turn(current, true)) current = current->up;
 				doubleTurn(current->right);
 				doubleTurn(current->left);
 			}
 		}
-		else cout << "no additional turn" << endl;
 	}
 	int getMinDepth(Node* current, bool isLeft) {
 		if (isLeft) {
@@ -67,24 +59,18 @@ struct Tree {
 	bool doubleTurn(Node* current) {
 		if (getDepth(current, true) - 1 > getDepth(current, false)) {
 			if (getDepth(current->left, true) < getDepth(current->left, false)) {
-				cout << "child turn left" << endl;
 				turn(current->left, true);
 			}
-			cout << "current turn right" << endl;
 			turn(current, false);
 			return true;
 		}
 		else if (getDepth(current, false) - 1 > getDepth(current, true)) {
-			//cout << getDepth(current->right, false) << getDepth(current->right, true) << endl;
 			if (getDepth(current->right, false) < getDepth(current->right, true)) {
-				cout << "child turn right" << endl;
 				turn(current->right, false);
 			}
-			cout << "current turn left" << endl;
 			turn(current, true);
 			return true;
 		}
-		cout << "no turn" << endl;
 		return false;
 	}
 	void Balance(Node* current = nullptr) {
@@ -93,22 +79,13 @@ struct Tree {
 		if (current->depth < 3) return;
 		if (current->left != nullptr) Balance(current->left);
 		if (current->right != nullptr) Balance(current->right);
-		if (current == nullptr) return;
 		if (current->depth < 3) return;
-		cout << current->value << endl;
 		if (doubleTurn(current)) {
-			//cout << current->value << endl;
 			renegadeBalancer(current);
 		}
 		else {
-			//cout << current->value << endl;
 			additionalTurn(current);
 		}
-		int* arr = ToArray(Prefix);
-		for (int i = 0; i < count(); i++) {
-			cout << arr[i] << " ";
-		}
-		cout << endl;
 	}
 	void depthFixer(Node* current) {
 		while (current != nullptr) {
@@ -132,19 +109,16 @@ struct Tree {
 	void req(int* array, int& index, Order order, Node* current) {
 		if (current == nullptr) return;
 		if (order == Prefix) {
-			//cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
 			array[index] = current->value;
 			index++;
 		}
 		req(array, index, order, current->left);
 		if (order == Infix) {
-			//cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
 			array[index] = current->value;
 			index++;
 		}
 		req(array, index, order, current->right);
 		if (order == Postfix) {
-			//cout << current->value << " max: " << current->depth << " min: " << current->minDepth << endl;
 			array[index] = current->value;
 			index++;
 		}
@@ -323,15 +297,6 @@ int main() {
 		cin >> input;
 	}
 	
-	int* arr = tree.ToArray(tree.Prefix);
-	for (int i = 0; i < tree.count(); i++) {
-		cout << arr[i] << " ";
-	}
-	cout << endl;
-	
-	tree.Balance();
-
-	cout << "Root Depth: "<< tree.root->depth << "   Root Min Depth:" << tree.root->minDepth << endl;
 	cout << "Enter numbers to search (sequence end sign 0):" << endl;
 	cin >> input;
 	while (input) {
